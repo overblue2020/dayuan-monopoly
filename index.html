@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>大園水果街大富翁</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: one phone-width column — status bar, square 28-cell board (7 per side) with dice in the middle, then rules and a short log. Market price-tag look. */
+:root{
+  --bg:#EEF3E6; --surface:#FCFDF8; --ink:#1E2A1F; --muted:#5B6758; --line:#CBD6C0;
+  --citrus:#E9821E; --on-citrus:#FFFFFF; --leaf:#2F7A4C; --on-leaf:#FFFFFF;
+  --fate:#4A57A0; --on-fate:#FFFFFF; --shop:#FFF6DF; --shop-line:#E6D3A3;
+  --start:#1E2A1F; --on-start:#F3F6EC; --bar:#DDE6D3; --scrim:rgba(20,28,20,.45);
+  --display:'LXGW WenKai TC','Kaiti TC','STKaiti',serif;
+  --body:'Noto Sans TC','PingFang TC','Microsoft JhengHei',sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121812; --surface:#1C241C; --ink:#EAF0E3; --muted:#A4B19E; --line:#33402F;
+  --citrus:#F29A3F; --on-citrus:#1A1208; --leaf:#5DB07E; --on-leaf:#0E1A12;
+  --fate:#8C98E0; --on-fate:#10142A; --shop:#2A2A1C; --shop-line:#4A4630;
+  --start:#EAF0E3; --on-start:#121812; --bar:#2C3829; --scrim:rgba(0,0,0,.6); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121812; --surface:#1C241C; --ink:#EAF0E3; --muted:#A4B19E; --line:#33402F;
+  --citrus:#F29A3F; --on-citrus:#1A1208; --leaf:#5DB07E; --on-leaf:#0E1A12;
+  --fate:#8C98E0; --on-fate:#10142A; --shop:#2A2A1C; --shop-line:#4A4630;
+  --start:#EAF0E3; --on-start:#121812; --bar:#2C3829; --scrim:rgba(0,0,0,.6); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+.wrap{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,40px);line-height:1.15;margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:2px 0 0;font-size:15px}
+
+.hud{display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0}
+.stat .k{font-size:13px;color:var(--muted);letter-spacing:.04em}
+.stat .v{font-family:var(--display);font-weight:700;font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--bar);border-radius:99px;overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--leaf);width:0;transition:width .4s}
+.pop{animation:pop .45s}
+@keyframes pop{40%{transform:scale(1.18)}}
+
+.board{display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);gap:3px;aspect-ratio:1/1;width:100%}
+.cell{position:relative;border-radius:8px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-width:0;
+  font-size:clamp(11px,2.3vw,16px);line-height:1.5;border:2px solid transparent}
+.cell .no{font-size:clamp(10px,1.7vw,12px);color:var(--muted);font-variant-numeric:tabular-nums}
+@media (max-width:560px){.cell .no,.cell .tag{display:none}}
+.cell.shop{background:var(--shop);border-color:var(--shop-line)}
+.cell.chance{background:var(--citrus);color:var(--on-citrus)}
+.cell.fate{background:var(--fate);color:var(--on-fate)}
+.cell.start{background:var(--start);color:var(--on-start)}
+.cell b{font-weight:700;font-size:clamp(12px,2.3vw,18px);line-height:1.5}
+.cell b .nw{display:inline-block;white-space:nowrap}
+.cell .tag{font-size:clamp(10px,1.7vw,13px);color:var(--muted);font-variant-numeric:tabular-nums}
+.cell.here{border-color:var(--ink)}
+.cell .cnt{position:absolute;left:3px;bottom:2px;font-size:11px;color:var(--leaf);font-weight:700}
+.token{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:var(--leaf);color:var(--on-leaf);
+  border:2px solid var(--surface);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:2;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+
+.center{grid-area:2/2/8/8;background:var(--surface);border:2px dashed var(--line);border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px;min-width:0}
+.clock{font-family:var(--display);font-size:clamp(20px,6vw,28px);font-weight:700;font-variant-numeric:tabular-nums}
+.when{font-size:clamp(13px,3.6vw,15px);color:var(--muted);text-align:center;min-height:1.4em}
+.die{width:clamp(54px,16vw,72px);aspect-ratio:1;border-radius:14px;background:var(--surface);border:3px solid var(--ink);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:8px;gap:2px}
+.die span{width:70%;aspect-ratio:1;border-radius:50%;background:var(--ink);place-self:center}
+.die.spin{animation:shake .5s}
+@keyframes shake{25%{transform:rotate(-14deg)}50%{transform:rotate(12deg)}75%{transform:rotate(-6deg)}}
+button{font:inherit;cursor:pointer}
+.roll{background:var(--citrus);color:var(--on-citrus);border:0;border-radius:999px;padding:10px 20px;font-size:clamp(16px,4.6vw,20px);font-weight:700}
+.roll:disabled{opacity:.45;cursor:default}
+.hint{display:flex;flex-direction:column;align-items:center;gap:0;font-weight:700;font-size:clamp(15px,2.6vw,18px);color:var(--ink);animation:bob 1s ease-in-out infinite}
+.hint .arrow{font-size:clamp(26px,5vw,36px);line-height:1;color:var(--citrus)}
+@keyframes bob{50%{transform:translateY(6px)}}
+.roll.pulse{animation:pulse 1.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 var(--citrus)}100%{box-shadow:0 0 0 14px transparent}}
+button:focus-visible{outline:3px solid var(--fate);outline-offset:2px}
+.bonus{font-size:13px;background:var(--fate);color:var(--on-fate);border-radius:99px;padding:2px 10px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.panel h2{font-family:var(--display);font-size:20px;margin:0 0 6px}
+.panel ol,.panel ul{margin:0;padding-left:1.3em}
+.log li{color:var(--muted)}
+.log li:first-child{color:var(--ink)}
+.note{font-size:13px;color:var(--muted);text-align:center}
+
+.overlay{position:fixed;inset:0;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:var(--surface);color:var(--ink);width:min(560px,100%);border-radius:20px 20px 0 0;
+  padding:20px max(20px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px;max-height:90%;overflow:auto;animation:up .25s ease-out}
+@media (min-width:640px){.overlay{align-items:center}.sheet{border-radius:20px}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}}
+.kind{align-self:flex-start;font-size:13px;font-weight:700;letter-spacing:.06em;border-radius:99px;padding:3px 12px}
+.sheet h3{font-family:var(--display);font-size:28px;margin:0;line-height:1.2}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{background:var(--bar);border-radius:99px;padding:3px 12px;font-size:14px}
+.story{font-size:17px;line-height:1.7;margin:0}
+.deal{display:flex;flex-wrap:wrap;gap:6px 28px;align-items:baseline;padding:10px 2px;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.deal span{font-size:16px;color:var(--muted)}
+.deal b{font-family:var(--display);font-size:26px;color:var(--ink);font-variant-numeric:tabular-nums}
+.deal .g b{color:var(--leaf)}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.acts button{flex:1 1 140px;border-radius:12px;padding:14px;font-size:18px;font-weight:700;border:2px solid var(--ink);background:var(--surface);color:var(--ink)}
+.acts button.primary{background:var(--ink);color:var(--surface)}
+.acts button:disabled{opacity:.4;cursor:default}
+.big{font-family:var(--display);font-size:56px;text-align:center;line-height:1}
+.sum{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center}
+.sum div{background:var(--bar);border-radius:12px;padding:8px}
+.sum b{font-family:var(--display);font-size:24px;display:block}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>大園水果街大富翁</h1>
+    <p class="sub">擲 8 次骰子逛市場，用手上的 300 元買好吃好玩的，天黑前讓快樂值集滿 20 分就贏了！</p>
+  </header>
+
+  <section class="hud" aria-label="目前狀態">
+    <div class="stat"><div class="k">錢包</div><div class="v" id="money">300 元</div></div>
+    <div class="stat"><div class="k">快樂值 <span id="happyTxt">0 / 20</span></div><div class="v" id="happy">0</div><div class="bar"><i id="happyBar"></i></div></div>
+    <div class="stat"><div class="k">剩下擲骰</div><div class="v" id="left">8 次</div></div>
+  </section>
+
+  <section class="board" id="board" aria-label="遊戲棋盤">
+    <div class="center">
+      <div class="clock" id="clock">06:00</div>
+      <div class="when" id="when">清晨，市場開始熱鬧</div>
+      <div class="die" id="die" aria-hidden="true"></div>
+      <span class="bonus" id="bonusTag" hidden>機捷加碼：免費再擲一次</span>
+      <div class="hint" id="hint" aria-hidden="true"><span>點這裡開始</span><span class="arrow">⬇</span></div>
+      <button class="roll" id="rollBtn">擲骰子</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>怎麼玩</h2>
+    <ol>
+      <li>按「擲骰子」，沿著格子順時針前進。</li>
+      <li>停到店家，決定要不要花錢買快樂；同一家可以再買。</li>
+      <li>停到機會、命運，會抽一張卡。經過起點領 <span id="ruleBonus">50</span> 元零用錢。</li>
+      <li>擲完 <span id="ruleRolls">8</span> 次前，快樂值達到 <span id="ruleTarget">20</span> 就通關！</li>
+    </ol>
+  </section>
+
+  <section class="panel">
+    <h2>今天發生的事</h2>
+    <ul class="log" id="log"><li>早安！帶著 300 元，到大園市場逛逛吧。</li></ul>
+  </section>
+
+  <p class="note">店家介紹整理自大園市場水果街（忠孝一街）的社區訪談。</p>
+</div>
+
+<div class="overlay" id="overlay" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+
+<script>
+/* ===== 可調整的遊戲設定 ===== */
+const CONFIG = {
+  startMoney: 300,     // 起始金錢
+  totalRolls: 8,       // 一天可擲骰次數
+  target: 20,          // 通關所需快樂值
+  passStartBonus: 50,  // 經過起點領的零用錢
+};
+
+/* 每一擲對應的時段（第 1 擲到第 8 擲） */
+const TIMES = [
+  ['06:00', '清晨，市場開始熱鬧'],
+  ['08:00', '早餐時間'],
+  ['10:00', '早市人最多'],
+  ['12:00', '午餐時間'],
+  ['14:00', '午後小憩'],
+  ['15:30', '下午點心時間'],
+  ['17:00', '傍晚，攤販準備收攤'],
+  ['18:00', '夕陽西下，最後一擲'],
+];
+
+/* 店家：no = 門牌，price = 花費（元），happy = 快樂值，verb = 購買按鈕文字 */
+const SHOPS = {
+  n1: { no:'1號', name:'水果攤', short:'水果攤', price:50, happy:3, verb:'買一袋水果', tags:['民國68年至今','在地水果'],
+    story:'薛老闆是大園南港人，現住新生北路。民國68年開始擺攤，一賣就是47年。攤上以台灣在地水果為主，也有少量進口水果，老闆娘和女兒在一旁幫忙。老闆說，賣水果容易上手，也好賺錢。' },
+  n2: { no:'2號', name:'水果攤兼賣果汁', short:'果汁|水果攤', price:80, happy:5, verb:'喝一杯現打果汁', tags:['高檔進口水果','現打果汁'],
+    story:'焦老闆是觀音人，在這裡做了25年，主賣高檔進口水果。他說25年前大園的經濟比觀音好，離家又近，就選了大園落腳。' },
+  n3: { no:'3號', name:'北港李', short:'北港李', price:60, happy:4, verb:'吃一份南部小吃', tags:['南部小吃','改良成北部口味'],
+    story:'李老闆夫妻一起經營，開店4年。賣的是道地南部小吃，為了合北部人的口味，特別把原本偏甜的味道調整過。' },
+  n5: { no:'5號', name:'雞媽媽', short:'雞媽媽', price:80, happy:5, verb:'切一份基隆肉捲', tags:['古早味基隆肉捲','雞鴨鵝熟食'],
+    story:'廖老闆是大園女婿，在市場賣熟食12年。雞、鴨、鵝、鹹豬肉樣樣有，最有特色的是古早味基隆肉捲。' },
+  n6: { no:'6號門口', name:'鹹豬肉攤', short:'鹹豬|肉攤', price:70, happy:4, verb:'買一份鹹豬肉', tags:['假日限定','鹹豬肉、香腸'],
+    story:'王老闆只在假日擺攤，一賣就是23年。除了鹹豬肉，香腸也很好吃。' },
+  n7: { no:'7號', name:'萬人福', short:'萬人福', price:90, happy:5, verb:'買一包現烤肉乾', tags:['現烤肉乾','散裝糖果'],
+    story:'楊老闆的店是大園僅存兩家傳統散裝糖果店之一，也是在地知名的手工現烤肉乾和伴手禮店。每逢假日，老闆就在店門口現烤肉乾，香味飄滿整條街。' },
+  n8: { no:'8號', name:'阿城古早味麵店', short:'阿城|麵店', price:40, happy:3, verb:'吃一碗麵', tags:['現炒油蔥酥','大骨湯'],
+    story:'老字號麵店。清晨五、六點，就能看到老闆在炒油蔥酥、熬大骨湯，一碗麵的好味道，天還沒亮就開始準備。' },
+  n12: { no:'12號', name:'客家菜包', short:'客家|菜包', price:30, happy:2, verb:'買兩個客家菜包', tags:['現做客家菜包','年節油飯肉粽'],
+    story:'徐老闆原本住中壢，因為弟妹是大園人，也跟著搬來大園定居。平常賣客家菜包和饅頭，逢年過節還有油飯、肉粽和麻糬。這是市場裡唯一現場手工做客家菜包的店，大園人團體出遊訂早餐，也最愛找他們。' },
+  n13: { no:'13號', name:'好鄰居', short:'好鄰居', price:100, happy:6, verb:'切一份雞肉', tags:['大排長龍的雞肉攤','想吃哪裡切哪裡'],
+    story:'從路邊攤起家的雞肉攤，攤前總是大排長龍。想吃哪個部位就切哪裡，可以自己挑是最大特色。' },
+  n17: { no:'17號', name:'玩具行', short:'玩具行', price:60, happy:3, verb:'挑一個玩具', tags:['少見的老玩具行'],
+    story:'現在很少見的老玩具行。二十幾年前，老闆娘還在店裡兼做美容。' },
+  n19: { no:'19號', name:'客滿座', short:'客滿座', price:50, happy:4, verb:'吃一碗白麵', tags:['第三代經營','過中午要靠運氣'],
+    story:'開了超過35年的麵食館，現在由第三代接手，也是網紅最推薦的大園市井小吃。招牌是不全熟的陽春白麵，加上滿滿的古早味肉燥和韭菜。肉燥是老老闆娘照著傅培梅食譜研究出來的，辣椒醬則是大園耆老阿福伯傳授的配方。滷味小菜撒上蔥薑、淋上特製辣椒醬，是老饕的最愛。白麵常常供不應求，過了中午12點就要碰運氣了。' },
+  n23: { no:'23號', name:'福旺', short:'福旺', price:30, happy:2, verb:'秤一包糖果', tags:['散裝零食','年節供品'],
+    story:'全大園僅有的兩家散裝零食店之一，民國68年開到現在。屋主是廖先生，由媳婦廖小姐經營。平常賣散裝糖果；過年前，大家也會來這裡買年節甜點，以及拜神明、祖先要用的供品。' },
+  n25: { no:'25號', name:'順安堂中藥房', short:'順安堂|藥房', price:60, happy:3, verb:'抓一帖四神', tags:['白胡椒粉','四神、八仙果'],
+    story:'服務親切，解說仔細。網友推薦白胡椒粉、四神和八仙果。' },
+  n29: { no:'29號', name:'加利利花坊', short:'加利利|花坊', price:50, happy:3, verb:'買一束花', tags:['初一十五送花到廟'],
+    story:'連老闆是基督長老教會的教友，但每逢初一、十五，他照樣固定送花到廟裡。送花，不分信仰。' },
+  n31: { no:'31號', name:'吉祥光', short:'吉祥光', price:40, happy:3, verb:'買一包素料', tags:['素食材料','非基改黃豆製品'],
+    story:'廖小姐自己經營，開店4年。這是市場裡兩家賣素食材料的店之一，品項很多，也是市場唯一賣非基改黃豆製品的店。' },
+  n32: { no:'32、34號', name:'阿足姊古早味早餐店', short:'阿足姊|早餐', price:40, happy:3, verb:'吃一份清粥小菜', tags:['清粥小菜','清晨就人來人往'],
+    story:'陳老闆是大園沙崙里的客家人，在地經營33年。清粥、白飯、炒麵、米粉樣樣有，是市場裡最大、也最有古早味的清粥小菜早午餐店。清晨六點店裡就人來人往，年節還會做粿、粽子和油飯。' },
+  n36: { no:'36號', name:'花韻花坊', short:'花韻|花坊', price:120, happy:7, verb:'訂一束客製花束', tags:['客製花束','外送服務'],
+    story:'可以客製花束，鈔票花束、香皂花都做得到，也接花藝佈置，還有外送服務。' },
+  n45: { no:'45號', name:'傢俱行', short:'傢俱行', price:40, happy:2, verb:'買一塊蘿蔔糕', tags:['鐵製櫥櫃','年節隱藏版粿店'],
+    story:'平常專賣鐵製櫥櫃，一到年節就變身「隱藏版粿店」，賣起粿和蘿蔔糕。' },
+  n53: { no:'53號', name:'美芊園花坊', short:'美芊園|花坊', price:80, happy:5, verb:'買一盆花', tags:['來自彰化田尾','會場佈置'],
+    story:'羅小姐一家來自彰化田尾。父母經營了25年，父親過世後，由女兒、女婿一家接手。除了零售花卉，也承接婚喪喜慶的會場佈置、園藝設計和樹木培育，過去在大園埔心還有一座園藝場。' },
+  n57: { no:'57號', name:'蘇家在大園水果店', short:'蘇家|水果店', price:30, happy:2, verb:'買一袋水果', tags:['機場徵收後落腳大園'],
+    story:'早年因為興建桃園國際機場，蘇家的土地被徵收，一家人就此在大園定居、做起水果生意。現在店面一半租給修改衣服的店家，另一半留給家中長輩擺水果賣。' },
+  n59: { no:'59號', name:'喻惠花坊', short:'喻惠|花坊', price:60, happy:4, verb:'帶一盆盆栽', tags:['精緻盆栽','價錢公道'],
+    story:'花藝和盆栽都很精緻漂亮，價錢也公道。' },
+};
+
+/* 棋盤：28 格，每邊 7 格，從左上角起點順時針；店家依門牌順序排列 */
+const EVENTS = { 3:'chance', 7:'fate', 11:'chance', 14:'fate', 18:'chance', 22:'fate' };
+const BOARD = (() => { const keys = Object.keys(SHOPS); const b = []; for (let i = 0; i < 28; i++) b.push(i === 0 ? 'start' : (EVENTS[i] || keys.shift())); return b; })();
+
+/* 機會卡 */
+const CHANCE = [
+  { title:'仁壽宮做醮', text:'全街熱鬧滾滾，鑼鼓聲一路響到市場。', happy:3 },
+  { title:'機場捷運通車', text:'出門更方便了！免費再擲一次骰子，不扣次數。', bonusRoll:1 },
+  { title:'幫阿伯搬水果箱', text:'阿伯塞給你一點零用錢當謝禮。', money:50 },
+  { title:'統一發票中獎', text:'上個月的發票對中了！', money:100 },
+  { title:'老闆請你試吃', text:'剛切好的水果，甜到心裡。', happy:2 },
+  { title:'遇到老鄰居聊天', text:'在路口聊了好一陣子，心情很好。', happy:1 },
+];
+/* 命運卡 */
+const FATE = [
+  { title:'午後雷陣雨', text:'忘了帶傘，被淋了一身濕。', happy:-1 },
+  { title:'排隊排太久', text:'人太多，腳都站痠了。', happy:-1 },
+  { title:'機車停錯位置', text:'被開了一張罰單。', money:-50 },
+  { title:'多拿一把蔥', text:'買菜順手又多買了一把蔥。', money:-30 },
+  { title:'廟口熱鬧繞境', text:'跟著陣頭走了一段，好熱鬧！', happy:2 },
+  { title:'聞到肉燥香', text:'被客滿座的古早味肉燥吸引，直接前往 19 號客滿座。', goShop:'n19' },
+];
+
+/* ===== 遊戲邏輯 ===== */
+const PIPS = {1:[[2,2]],2:[[1,1],[3,3]],3:[[1,1],[2,2],[3,3]],4:[[1,1],[1,3],[3,1],[3,3]],5:[[1,1],[1,3],[2,2],[3,1],[3,3]],6:[[1,1],[2,1],[3,1],[1,3],[2,3],[3,3]]};
+const RING = Array.from({length:28}, (_, i) => i < 7 ? [1, 1 + i] : i < 14 ? [1 + (i - 7), 8] : i < 21 ? [8, 8 - (i - 14)] : [8 - (i - 21), 1]);
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+let S, cellEls = [], token;
+
+function fresh(){ return { pos:0, money:CONFIG.startMoney, happy:0, used:0, bonus:0, busy:false, over:false, bought:{}, die:1, log:[`早安！帶著 ${CONFIG.startMoney} 元，到大園市場逛逛吧。`] }; }
+
+function buildBoard(){
+  const board = $('board');
+  BOARD.forEach((key, i) => {
+    const el = document.createElement('div');
+    const [r, c] = RING[i];
+    el.style.gridRow = r; el.style.gridColumn = c;
+    if (key === 'start') { el.className = 'cell start'; el.innerHTML = '<b>起點</b><span>+' + CONFIG.passStartBonus + '元</span>'; }
+    else if (key === 'chance') { el.className = 'cell chance'; el.innerHTML = '<b>機會</b>'; }
+    else if (key === 'fate') { el.className = 'cell fate'; el.innerHTML = '<b>命運</b>'; }
+    else { const s = SHOPS[key]; el.className = 'cell shop'; el.innerHTML = `<span class="no">${s.no}</span><b>${s.short.split('|').map(x => `<span class="nw">${x}</span>`).join('')}</b><span class="cnt"></span>`; }
+    el.setAttribute('aria-label', key in SHOPS ? `${SHOPS[key].no}${SHOPS[key].name}，${SHOPS[key].price} 元，快樂值加 ${SHOPS[key].happy}` : el.textContent);
+    board.appendChild(el); cellEls.push(el);
+  });
+  token = document.createElement('div'); token.className = 'token'; token.textContent = '我';
+}
+
+function drawDie(n){ $('die').innerHTML = PIPS[n].map(([r,c]) => `<span style="grid-area:${r}/${c}"></span>`).join(''); }
+
+function render(){
+  $('money').textContent = S.money + ' 元';
+  $('happy').textContent = S.happy;
+  $('happyTxt').textContent = `${S.happy} / ${CONFIG.target}`;
+  $('happyBar').style.width = Math.min(100, S.happy / CONFIG.target * 100) + '%';
+  $('left').textContent = (CONFIG.totalRolls - S.used) + ' 次';
+  const t = TIMES[Math.min(S.used, TIMES.length - 1)];
+  $('clock').textContent = S.over ? (S.happy >= CONFIG.target ? '😊' : '19:00') : t[0];
+  $('when').textContent = S.over ? (S.happy >= CONFIG.target ? '快樂的一天！' : '太陽下山了') : (S.used === CONFIG.totalRolls - 1 && !S.bonus ? '夕陽西下，最後一擲' : t[1]);
+  $('bonusTag').hidden = !S.bonus || S.over;
+  $('rollBtn').textContent = S.over ? '再玩一次' : '擲骰子';
+  $('rollBtn').disabled = S.busy;
+  const first = S.used === 0 && !S.busy && !S.over;
+  $('hint').hidden = !first;
+  $('rollBtn').classList.toggle('pulse', first);
+  cellEls.forEach((el, i) => { el.classList.toggle('here', i === S.pos); const c = el.querySelector('.cnt'); if (c) { const n = S.bought[BOARD[i]] || 0; c.textContent = n ? '✓' + (n > 1 ? n : '') : ''; } });
+  cellEls[S.pos].appendChild(token);
+  $('log').innerHTML = S.log.slice(-6).reverse().map(x => `<li>${x}</li>`).join('');
+  drawDie(S.die);
+}
+function bump(id){ const el = $(id); el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+function addLog(t){ S.log.push(t); }
+
+async function roll(){
+  if (S.busy) return;
+  if (S.over) { S = fresh(); render(); return; }
+  S.busy = true;
+  const free = S.bonus > 0;
+  if (free) S.bonus--; else S.used++;
+  render();
+  const die = $('die'); die.classList.add('spin');
+  for (let k = 0; k < 6; k++) { S.die = 1 + Math.floor(Math.random() * 6); drawDie(S.die); await wait(80); }
+  die.classList.remove('spin');
+  const n = S.die;
+  addLog(`${free ? '機捷加碼' : TIMES[S.used - 1][0]} 擲出 ${n} 點`);
+  for (let k = 0; k < n; k++) {
+    S.pos = (S.pos + 1) % BOARD.length;
+    if (S.pos === 0) { S.money += CONFIG.passStartBonus; addLog(`經過起點，領 ${CONFIG.passStartBonus} 元零用錢`); bump('money'); }
+    render(); await wait(200);
+  }
+  await land();
+}
+
+async function land(){
+  const key = BOARD[S.pos];
+  if (key in SHOPS) return showShop(key);
+  if (key === 'chance' || key === 'fate') return showCard(key);
+  finishTurn();
+}
+
+function openSheet(html, focusSel){
+  $('sheet').innerHTML = html; $('overlay').hidden = false;
+  const f = $('sheet').querySelector(focusSel || 'button'); if (f) f.focus();
+}
+function closeSheet(){ $('overlay').hidden = true; }
+
+function showShop(key){
+  const s = SHOPS[key], can = S.money >= s.price, verb = s.verb || '買快樂';
+  openSheet(`
+    <span class="kind" style="background:var(--shop);border:1px solid var(--shop-line)">店家・${s.no}</span>
+    <h3>${s.name}</h3>
+    <div class="chips">${s.tags.map(t => `<span>${t}</span>`).join('')}</div>
+    <p class="story">${s.story}</p>
+    <div class="deal"><span>花費 <b>${s.price}</b> 元</span><span class="g">快樂值 <b>+${s.happy}</b></span></div>
+    <div class="acts">
+      <button class="primary" id="buy" ${can ? '' : 'disabled'}>${can ? `${verb}（${s.price} 元）` : `錢不夠（還差 ${s.price - S.money} 元）`}</button>
+      <button id="skip">下次再說</button>
+    </div>`, can ? '#buy' : '#skip');
+  if (can) $('buy').onclick = () => { S.money -= s.price; S.happy += s.happy; S.bought[key] = (S.bought[key] || 0) + 1; addLog(`在${s.name}花 ${s.price} 元，快樂值 +${s.happy}`); closeSheet(); bump('happy'); bump('money'); finishTurn(); };
+  $('skip').onclick = () => { addLog(`經過${s.name}，這次先不買`); closeSheet(); finishTurn(); };
+}
+
+function showCard(kind){
+  const deck = kind === 'chance' ? CHANCE : FATE;
+  const c = deck[Math.floor(Math.random() * deck.length)];
+  const fx = [];
+  if (c.money) fx.push(`${c.money > 0 ? '+' : ''}${c.money} 元`);
+  if (c.happy) fx.push(`快樂值 ${c.happy > 0 ? '+' : ''}${c.happy}`);
+  if (c.bonusRoll) fx.push('免費再擲一次');
+  if (c.goShop) fx.push('前往' + SHOPS[c.goShop].no + SHOPS[c.goShop].short);
+  const color = kind === 'chance' ? 'background:var(--citrus);color:var(--on-citrus)' : 'background:var(--fate);color:var(--on-fate)';
+  openSheet(`
+    <span class="kind" style="${color}">${kind === 'chance' ? '機會' : '命運'}</span>
+    <h3>${c.title}</h3>
+    <p class="story">${c.text}</p>
+    <div class="deal"><span>結果 <b>${fx.join('、')}</b></span></div>
+    <div class="acts"><button class="primary" id="ok">好</button></div>`);
+  $('ok').onclick = async () => {
+    closeSheet();
+    if (c.money) { S.money = Math.max(0, S.money + c.money); bump('money'); }
+    if (c.happy) { S.happy = Math.max(0, S.happy + c.happy); bump('happy'); }
+    if (c.bonusRoll) S.bonus += c.bonusRoll;
+    addLog(`${kind === 'chance' ? '機會' : '命運'}：${c.title}（${fx.join('、')}）`);
+    if (c.goShop) { S.pos = BOARD.indexOf(c.goShop); render(); await wait(300); return showShop(c.goShop); }
+    finishTurn();
+  };
+}
+
+function finishTurn(){
+  S.busy = false;
+  if (S.happy >= CONFIG.target) return endGame(true);
+  if (S.used >= CONFIG.totalRolls && S.bonus === 0) return endGame(false);
+  render();
+}
+
+function endGame(win){
+  S.over = true; S.busy = false; render();
+  const spent = Object.entries(S.bought).reduce((a, [k, n]) => a + SHOPS[k].price * n, 0);
+  const shops = Object.entries(S.bought).map(([k, n]) => SHOPS[k].name + (n > 1 ? ` ×${n}` : '')).join('、') || '一家都沒買';
+  addLog(win ? '快樂值滿了，有個快樂的一天！' : '太陽下山了，明天再來逛吧。');
+  openSheet(`
+    <div class="big">${win ? '🎉' : '🌇'}</div>
+    <h3 style="text-align:center">${win ? '有個快樂的一天！' : '太陽下山了，明天再來逛'}</h3>
+    <p class="story" style="text-align:center">${win ? `只擲了 ${S.used} 次，就湊滿 ${CONFIG.target} 點快樂值。` : `快樂值還差 ${CONFIG.target - S.happy} 點。小提示：便宜的店也別錯過，積少成多！`}</p>
+    <div class="sum"><div>快樂值<b>${S.happy}</b></div><div>剩下的錢<b>${S.money} 元</b></div><div>花掉<b>${spent} 元</b></div><div>擲骰<b>${S.used} 次</b></div></div>
+    <p class="story" style="font-size:15px;color:var(--muted)">今天去過：${shops}</p>
+    <div class="acts"><button class="primary" id="again">再玩一次</button><button id="look">看看棋盤</button></div>`);
+  $('again').onclick = () => { closeSheet(); S = fresh(); render(); };
+  $('look').onclick = () => { closeSheet(); render(); };
+}
+
+function showIntro(){
+  openSheet(`
+    <span class="kind" style="background:var(--leaf);color:var(--on-leaf)">今天的任務</span>
+    <h3>擲 ${CONFIG.totalRolls} 次骰子逛市場，用手上的 ${CONFIG.startMoney} 元買好吃好玩的，天黑前讓快樂值集滿 ${CONFIG.target} 分就贏了！</h3>
+    <div class="sum"><div>帶著<b>${CONFIG.startMoney} 元</b></div><div>可以擲<b>${CONFIG.totalRolls} 次</b></div></div>
+    <ol class="story" style="padding-left:1.3em;margin:0">
+      <li>擲骰子，沿著市場繞圈前進。</li>
+      <li>停到店家，決定要不要花錢買快樂。</li>
+      <li>機會、命運格會抽卡，有好有壞。</li>
+    </ol>
+    <div class="acts"><button class="primary" id="go">開始逛市場</button></div>`);
+  $('go').onclick = closeSheet;
+}
+
+$('rollBtn').onclick = roll;
+$('ruleBonus').textContent = CONFIG.passStartBonus;
+$('ruleRolls').textContent = CONFIG.totalRolls;
+$('ruleTarget').textContent = CONFIG.target;
+buildBoard();
+S = fresh();
+render();
+showIntro();
+</script>
+
+</html>
